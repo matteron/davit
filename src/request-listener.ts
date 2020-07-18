@@ -3,8 +3,6 @@ import * as fs from 'fs';
 import { contentTypeMapper, ContentTypes } from './types/content-types';
 import { FileType } from './types/file-types';
 
-const test = 'test';
-
 const readDir = (path: fs.PathLike): string[] => {
 	return fs.readdirSync(path).reduce((acc, cur) => {
 		const isDir = fs.statSync(`${path}/${cur}`).isDirectory();
@@ -18,42 +16,46 @@ const readDir = (path: fs.PathLike): string[] => {
 	}, [] as string[]);
 }
 
-const dir: string[] = readDir(test);
+export const listenerFactory = (dir: fs.PathLike): http.RequestListener => {
 
-export const requestListener: http.RequestListener = function(req, res) {
-	const url = req.url ?? '';
+	const dirs: string[] = readDir(dir);
 
-	let contentType: ContentTypes;
-	let path: fs.PathLike;
-
-	if (url === '/') {
-		contentType = 'text/html';
-		path = 'test/index.html'
-	} else {
-		const noSlash = url.substr(1);
-		const file = noSlash.split('.').length > 1
-			? dir.find(f => f === noSlash)
-			: dir.find(f => f.split('.')[0] === noSlash);
-
-		if (file) {
-			const ext = file.split('.')[1] as FileType;
-				
-			if (ext) {
-				contentType = contentTypeMapper[ext];
-				path = 'test/' + file;
+	return function(req, res) {
+		const url = req.url ?? '';
+	
+		let contentType: ContentTypes;
+		let path: fs.PathLike;
+	
+		if (url === '/') {
+			contentType = 'text/html';
+			path = 'test/index.html'
+		} else {
+			const noSlash = url.substr(1);
+			
+			const file = noSlash.split('.').length > 1
+				? dirs.find(f => f === noSlash)
+				: dirs.find(f => f.split('.')[0] === noSlash);
+	
+			if (file) {
+				const ext = file.split('.')[1] as FileType;
+					
+				if (ext) {
+					contentType = contentTypeMapper[ext];
+					path = 'test/' + file;
+				} else {
+					console.error(`File Type Incompatible`);
+					return;
+				}
 			} else {
-				console.error(`File Type Incompatible`);
+				console.error(`File not found: ${noSlash}`);
 				return;
 			}
-		} else {
-			console.error(`File not found: ${noSlash}`);
-			return;
 		}
+	
+		fs.readFile(path, {}, (err, data) => {
+			res.setHeader('Content-Type', contentType);
+			res.writeHead(200);
+			res.end(data);
+		});
 	}
-
-	fs.readFile(path, {}, (err, data) => {
-		res.setHeader('Content-Type', contentType);
-		res.writeHead(200);
-		res.end(data);
-	});
 }
