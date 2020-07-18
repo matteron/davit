@@ -1,11 +1,33 @@
 import * as http from 'http';
-import * as fs from 'fs';
 import { requestListener } from './request-listener';
 
-const port = 3000;
-const host = 'localhost';
+interface LivelyOptions {
+	port: number;
+	host: string;
+}
 
-const server = http.createServer(requestListener);
-server.listen(port, host, () => {
-	console.log(`Server is running on http://${host}:${port}`);
-})
+export class Lively {
+	
+	options: LivelyOptions = {
+		port: 3000,
+		host: 'localhost'
+	}
+	server = http.createServer(requestListener);
+	
+	constructor(options?: Partial<LivelyOptions>) {
+		if (options) {
+			Object.assign(this.options, options);
+		}
+	}
+
+	private printAddress(): string {
+		return `http://${this.options.host}:${this.options.port}`
+	}
+
+	start(): void {
+		this.server.listen(this.options.port, this.options.host, () => {
+			console.log(`Server is running on ${this.printAddress()}`);
+		});
+	}
+
+}
