@@ -12,7 +12,7 @@ Davit aims to as lightweight as possible.  There's only one dependency, [ws](htt
 
 ## Basic Usage
 
-The following code will start a davit server 
+The following code will start a davit server that watches for changes to the style sheet.
 
 ```JavaScript
 const { Davit } = require('davit');
