@@ -55,7 +55,6 @@ export class Lively {
 	watch(location: fs.PathLike, callback?: (event: FileEvent, filename: string, path: fs.PathLike) => void): void {
 		
 		const createWatch = (loc: string): void => {
-			console.log(loc);
 			fs.watch(`${this.options.source}/${loc}`, (event, filename) => {
 				if (this.options.verbose) {
 					console.log(`☼ ${this.options.source}/${loc}`);

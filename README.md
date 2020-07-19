@@ -24,4 +24,19 @@ lv.watch('media/style.css');
 lv.start();
 ```
 
-## How
+## Options
+
+`port`: number - Port to bind server.  Defaults to 3000.
+
+`host`: string - The hostname to bind the server.  Default to localhost.
+
+`root`: string - Path to serve files from.
+
+`source`: string - Let's you watch files from a different folder.
+
+`symbol`: string - Prints next to the server address on startup :)  Defaults to ♨.
+
+`verbose`: boolean - Prints out every time a watch event fires.  Defaults to false.
+
+## Disclaimer
+In order to make this work, lively will insert a script into the head tag of every html file it serves.  The script will open up a web socket and connect back to lively so the browser can receive commands for the live reload.
