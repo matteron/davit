@@ -1,10 +1,11 @@
 import * as http from 'http';
 import * as fs from 'fs';
-import { contentTypeMap, ContentType } from './types/content.type';
+import { ContentType } from './types/content.type';
 import { FileType } from './types/file.type';
 import { injection } from './live-reload/injection';
 import { address } from './utils/address';
 import { Protocols } from './types/protocol.enum';
+import { contentTypeMap } from './types/content-type.map';
 
 const readDir = (path: fs.PathLike): string[] => {
 	return fs.readdirSync(path).reduce((acc, cur) => {
@@ -43,10 +44,9 @@ export const listenerFactory = (dir: fs.PathLike, host: string, port: number): h
 	
 		if (url === '/') {
 			contentType = 'text/html';
-			path = 'test/index.html'
+			path = `${dir}/index.html`
 		} else {
 			const noSlash = url.substr(1);
-			
 			const file = noSlash.split('.').length > 1
 				? dirs.find(f => f === noSlash)
 				: dirs.find(f => f.split('.')[0] === noSlash);
@@ -56,7 +56,7 @@ export const listenerFactory = (dir: fs.PathLike, host: string, port: number): h
 					
 				if (ext) {
 					contentType = contentTypeMap[ext];
-					path = 'test/' + file;
+					path = `${dir}/${file}`;
 				} else {
 					console.error(`File Type Incompatible`);
 					return;
@@ -67,7 +67,7 @@ export const listenerFactory = (dir: fs.PathLike, host: string, port: number): h
 			}
 		}
 	
-		fs.readFile(path, {}, (err, data) => {
+		fs.readFile(path, {}, (_, data) => {
 			res.setHeader('Content-Type', contentType);
 			res.writeHead(200);
 			if (contentType === 'text/html') {

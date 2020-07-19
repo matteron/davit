@@ -21,7 +21,6 @@ exports.injection = (address) => {
 	};
 
 	let raw = fs.readFileSync(path.resolve(__dirname, './injection.js'), 'utf-8');
-	// [TODO] maybe make this a loop
 	Object.keys(selectors).forEach(key => {
 		raw = insert(key, raw, selectors[key]);
 	});
