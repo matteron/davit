@@ -1,13 +1,14 @@
 import * as http from 'http';
 import { listenerFactory } from './request-listener';
 import * as fs from 'fs';
+import * as path from 'path';
 import { FileEvent } from './types/file-event.type';
 import { LiveReload } from './live-reload/live-reload';
 import { Protocols } from './types/protocol.enum';
 import { address } from './utils/address';
 import { open } from './utils/open';
 
-interface LivelyOptions {
+interface DavitOptions {
 	port: number;
 	host: string;
 	root: string;
@@ -16,9 +17,9 @@ interface LivelyOptions {
 	verbose: boolean;
 }
 
-export class Lively {
+export class Davit {
 	
-	options: LivelyOptions = {
+	options: DavitOptions = {
 		port: 3000,
 		host: 'localhost',
 		root: '',
@@ -30,7 +31,7 @@ export class Lively {
 	server: http.Server;
 	liveReload: LiveReload;
 	
-	constructor(options?: Partial<LivelyOptions>) {
+	constructor(options?: Partial<DavitOptions>) {
 
 		if (options) {
 			Object.assign(this.options, options);
@@ -56,11 +57,12 @@ export class Lively {
 		
 		const createWatch = (loc: string): void => {
 			fs.watch(`${this.options.source}/${loc}`, (event, filename) => {
+				const fullPath = path.join(this.options.source, loc)
 				if (this.options.verbose) {
-					console.log(`☼ ${this.options.source}/${loc}`);
+					console.log(`☼ ${fullPath}`);
 				}
 				if (callback) {
-					callback(event as FileEvent, filename, `${this.options.source}/${filename}`);
+					callback(event as FileEvent, filename, fullPath);
 				}
 				this.liveReload.reload();
 			});

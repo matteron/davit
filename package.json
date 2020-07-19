@@ -1,7 +1,7 @@
 {
-  "name": "lively",
+  "name": "davit",
   "version": "1.0.0",
-  "description": "Lightweight, Live reload, Dev Server ",
+  "description": "Lightweight, Live reload, Dev Server",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "files": [
@@ -12,7 +12,11 @@
     "build": "tsc",
     "prepare": "npm run build"
   },
-  "keywords": [],
+  "keywords": [
+    "live reload",
+    "server",
+    "dev server"
+  ],
   "author": "Mattia",
   "license": "ISC",
   "devDependencies": {
