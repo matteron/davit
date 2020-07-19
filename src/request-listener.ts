@@ -1,7 +1,10 @@
 import * as http from 'http';
 import * as fs from 'fs';
-import { contentTypeMapper, ContentTypes } from './types/content-types';
+import { contentTypeMap, ContentTypes } from './types/content-types';
 import { FileType } from './types/file-types';
+import { injection } from './live-reload/injection';
+import { address } from './utils/print-address';
+import { Protocols } from './types/protocol.enum';
 
 const readDir = (path: fs.PathLike): string[] => {
 	return fs.readdirSync(path).reduce((acc, cur) => {
@@ -16,9 +19,21 @@ const readDir = (path: fs.PathLike): string[] => {
 	}, [] as string[]);
 }
 
-export const listenerFactory = (dir: fs.PathLike): http.RequestListener => {
+export const listenerFactory = (dir: fs.PathLike, host: string, port: number): http.RequestListener => {
 
 	const dirs: string[] = readDir(dir);
+	const payload = injection(address(Protocols.ws, host, port));
+
+	function injectPayload(data: Buffer): string {
+		const selector = '<head>';
+		const html = data.toString('utf-8').split(selector);
+		return html[0]
+			+ selector
+			+ '<script>\n'
+			+ payload
+			+ '</script>\n'
+			+ html[1];
+	}
 
 	return function(req, res) {
 		const url = req.url ?? '';
@@ -40,7 +55,7 @@ export const listenerFactory = (dir: fs.PathLike): http.RequestListener => {
 				const ext = file.split('.')[1] as FileType;
 					
 				if (ext) {
-					contentType = contentTypeMapper[ext];
+					contentType = contentTypeMap[ext];
 					path = 'test/' + file;
 				} else {
 					console.error(`File Type Incompatible`);
@@ -55,7 +70,11 @@ export const listenerFactory = (dir: fs.PathLike): http.RequestListener => {
 		fs.readFile(path, {}, (err, data) => {
 			res.setHeader('Content-Type', contentType);
 			res.writeHead(200);
-			res.end(data);
+			if (contentType === 'text/html') {
+				res.end(injectPayload(data));
+			} else {
+				res.end(data);
+			}
 		});
 	}
 }

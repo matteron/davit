@@ -1,1 +1,1 @@
-export type FileEvent = 'rename' | 'change'
+export type FileEvent = 'rename' | 'change';
