@@ -1,10 +1,11 @@
 import * as http from 'http';
 import { listenerFactory } from './request-listener';
 import * as fs from 'fs';
-import { FileEvent } from './types/file-event-type';
+import { FileEvent } from './types/file-event.type';
 import { LiveReload } from './live-reload/live-reload';
 import { Protocols } from './types/protocol.enum';
-import { address } from './utils/print-address';
+import { address } from './utils/address';
+import { open } from './utils/open';
 
 interface LivelyOptions {
 	port: number;
@@ -12,6 +13,7 @@ interface LivelyOptions {
 	root: string;
 	source: string;
 	symbol: string;
+	verbose: boolean;
 }
 
 export class Lively {
@@ -21,7 +23,8 @@ export class Lively {
 		host: 'localhost',
 		root: '',
 		source: '',
-		symbol: '♨'
+		symbol: '♨',
+		verbose: false
 	}
 	address: string;
 	server: http.Server;
@@ -45,15 +48,32 @@ export class Lively {
 	start(): void {
 		this.server.listen(this.options.port, this.options.host, () => {
 			console.log(`${this.options.symbol} ${this.address}`);
+			open(this.address);
 		});
 	}
 
 	watch(location: fs.PathLike, callback?: (event: FileEvent, filename: string, path: fs.PathLike) => void): void {
-		fs.watch(`${this.options.source}/${location}`, (event, filename) => {
-			if (callback) {
-				callback(event as FileEvent, filename, `${this.options.source}/${filename}`);
-			}
-			this.liveReload.reload();
-		});
+		
+		const createWatch = (loc: string): void => {
+			console.log(loc);
+			fs.watch(`${this.options.source}/${loc}`, (event, filename) => {
+				if (this.options.verbose) {
+					console.log(`☼ ${this.options.source}/${loc}`);
+				}
+				if (callback) {
+					callback(event as FileEvent, filename, `${this.options.source}/${filename}`);
+				}
+				this.liveReload.reload();
+			});
+		}
+		
+		const wildcards = location.toString().split('*');
+		if (wildcards.length > 1) {
+			fs.readdirSync(`${this.options.source}/${wildcards[0]}`)
+				.filter(fn => fn.endsWith(wildcards[1]))
+				.forEach(f => createWatch(`${wildcards[0]}${f}`));
+		} else {
+			createWatch(location.toString());
+		}
 	}
 }

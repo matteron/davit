@@ -3,10 +3,11 @@ const path = require('path');
 const WebSocket = require('ws');
 const { WSEvents } = require('../types/ws-events.enum');
 
-const injectionSelector = 'INJECTION';
 
+// A Parameterized Quine for fun.
 exports.injection = (address) => {
 
+	const injectionSelector = 'INJECTION';
 	const selectors = {
 		'address': address,
 		'connection': address,

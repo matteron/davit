@@ -1,9 +1,9 @@
 import * as http from 'http';
 import * as fs from 'fs';
-import { contentTypeMap, ContentTypes } from './types/content-types';
-import { FileType } from './types/file-types';
+import { contentTypeMap, ContentType } from './types/content.type';
+import { FileType } from './types/file.type';
 import { injection } from './live-reload/injection';
-import { address } from './utils/print-address';
+import { address } from './utils/address';
 import { Protocols } from './types/protocol.enum';
 
 const readDir = (path: fs.PathLike): string[] => {
@@ -38,7 +38,7 @@ export const listenerFactory = (dir: fs.PathLike, host: string, port: number): h
 	return function(req, res) {
 		const url = req.url ?? '';
 	
-		let contentType: ContentTypes;
+		let contentType: ContentType;
 		let path: fs.PathLike;
 	
 		if (url === '/') {

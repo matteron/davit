@@ -1,6 +1,6 @@
 import * as http from 'http';
 import * as WebSocket from 'ws';
-import { address } from '../utils/print-address';
+import { address } from '../utils/address';
 import { Protocols } from '../types/protocol.enum';
 import { AddressInfo } from 'net';
 import { PathLike } from 'fs';
