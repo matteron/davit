@@ -40,5 +40,14 @@ dv.start();
 
 `verbose`: boolean - Prints out every time a watch event fires.  Defaults to false.
 
+## Running Code before Reload
+If you'd like to perform some actions before the watch service reloads the site, you can do so like this.
+
+```JavaScript
+dv.watch('media/*.css', (fileName, fullPath) => {
+	codeHere();
+});
+```
+
 ## Disclaimer
-In order to make this work, davit will insert a script into the head tag of every html file it serves.  The script will open up a web socket and connect back to davit so the browser can receive commands for the live reload.
+In order to make live reloading work, davit inserts a script into the head tag of every html file it serves.  The script will open up a web socket and connect back to davit so the browser can receive commands for the live reload.  The full source code of this script can be found in [`src/live-reload/injection.js`](https://github.com/matteron/davit/blob/master/src/live-reload/injection.js).  Specifically in the function called `payload`.
