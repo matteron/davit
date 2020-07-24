@@ -2,7 +2,6 @@ import * as http from 'http';
 import { listenerFactory } from './request-listener';
 import * as fs from 'fs';
 import * as path from 'path';
-import { FileEvent } from './types/file-event.type';
 import { LiveReload } from './live-reload/live-reload';
 import { Protocols } from './types/protocol.enum';
 import { address } from './utils/address';
@@ -15,6 +14,13 @@ interface DavitOptions {
 	source: string;
 	symbol: string;
 	verbose: boolean;
+	buffer: number;
+}
+
+type WatchCallback = (filename: string, path: fs.PathLike) => void;
+interface BufferEntry {
+	callback?: WatchCallback;
+	filename: string;
 }
 
 export class Davit {
@@ -25,11 +31,14 @@ export class Davit {
 		root: '',
 		source: '',
 		symbol: '♨',
-		verbose: false
+		verbose: false,
+		buffer: 200
 	}
 	address: string;
 	server: http.Server;
 	liveReload: LiveReload;
+	callBuffer: { [key: string]: BufferEntry } = {};
+	tid: NodeJS.Timeout = setTimeout(() => {}, 0);
 	
 	constructor(options?: Partial<DavitOptions>) {
 
@@ -53,18 +62,39 @@ export class Davit {
 		});
 	}
 
-	watch(location: fs.PathLike, callback?: (event: FileEvent, filename: string, path: fs.PathLike) => void): void {
+	buffer(filename: string, path: fs.PathLike, callback?: WatchCallback): void {
+		this.callBuffer[path.toString()] = {
+			callback,
+			filename
+		};
+		clearTimeout(this.tid);
+		this.tid = setTimeout(() => {
+			const keys = Object.keys(this.callBuffer);
+			keys.forEach(key => {
+				const entry = this.callBuffer[key];
+				if (entry.callback) {
+					entry.callback(entry.filename, key);
+				}
+			});
+			this.callBuffer = {};
+			if (this.options.verbose) {
+				const bufferCount = keys.length > 1
+					? ` (${keys.length} Events)` : '';
+				console.log(`Reloading...${bufferCount}`);
+			}
+			this.liveReload.reload();
+		}, this.options.buffer);
+	}
+
+	watch(location: fs.PathLike, callback?: WatchCallback): void {
 		
 		const createWatch = (loc: string): void => {
-			fs.watch(`${this.options.source}/${loc}`, (event, filename) => {
+			fs.watch(`${this.options.source}/${loc}`, (_, filename) => {
 				const fullPath = path.join(this.options.source, loc)
 				if (this.options.verbose) {
 					console.log(`☼ ${fullPath}`);
 				}
-				if (callback) {
-					callback(event as FileEvent, filename, fullPath);
-				}
-				this.liveReload.reload();
+				this.buffer(filename, fullPath, callback);
 			});
 		}
 		

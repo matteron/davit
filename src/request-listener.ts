@@ -30,7 +30,7 @@ export const listenerFactory = (dir: fs.PathLike, host: string, port: number): h
 		const html = data.toString('utf-8').split(selector);
 		return html[0]
 			+ selector
-			+ '<script>\n'
+			+ '\n<script>\n'
 			+ payload
 			+ '</script>\n'
 			+ html[1];
@@ -58,15 +58,21 @@ export const listenerFactory = (dir: fs.PathLike, host: string, port: number): h
 					contentType = contentTypeMap[ext];
 					path = `${dir}/${file}`;
 				} else {
-					console.error(`File Type Incompatible`);
+					const message = `File Type Incompatible`
+					console.error(message);
+					res.writeHead(500);
+					res.end(message);
 					return;
 				}
 			} else {
-				console.error(`File not found: ${noSlash}`);
+				const message = `File not found: ${noSlash}`;
+				console.error(message);
+				res.writeHead(404);
+				res.end(message);
 				return;
 			}
 		}
-	
+
 		fs.readFile(path, {}, (_, data) => {
 			res.setHeader('Content-Type', contentType);
 			res.writeHead(200);
