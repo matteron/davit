@@ -29,9 +29,8 @@ exports.injection = (address) => {
 	function payload() {
 		// INJECTION
 		const ws = new WebSocket('{{address}}');
-		const reload = () => location.reload();
 		const commandMap = {
-			'{{reload}}': reload
+			'{{reload}}': location.reload
 		}
 		ws.onopen = function() {
 			console.log('✦ {{connection}}');

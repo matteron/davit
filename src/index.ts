@@ -6,16 +6,7 @@ import { LiveReload } from './live-reload/live-reload';
 import { Protocols } from './types/protocol.enum';
 import { address } from './utils/address';
 import { open } from './utils/open';
-
-interface DavitOptions {
-	port: number;
-	host: string;
-	root: string;
-	source: string;
-	symbol: string;
-	verbose: boolean;
-	buffer: number;
-}
+import { DavitOptions, Defaults } from './types/davit-options';
 
 type WatchCallback = (filename: string, path: fs.PathLike) => void;
 interface BufferEntry {
@@ -25,15 +16,7 @@ interface BufferEntry {
 
 export class Davit {
 	
-	options: DavitOptions = {
-		port: 3000,
-		host: 'localhost',
-		root: '',
-		source: '',
-		symbol: '♨',
-		verbose: false,
-		buffer: 200
-	}
+	options: DavitOptions = Defaults;
 	address: string;
 	server: http.Server;
 	liveReload: LiveReload;
@@ -57,7 +40,7 @@ export class Davit {
 
 	start(): void {
 		this.server.listen(this.options.port, this.options.host, () => {
-			console.log(`${this.options.symbol} ${this.address}`);
+			console.log(`${this.options.glyph} ${this.address}`);
 			open(this.address);
 		});
 	}

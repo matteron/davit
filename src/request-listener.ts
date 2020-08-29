@@ -1,11 +1,9 @@
 import * as http from 'http';
 import * as fs from 'fs';
-import { ContentType } from './types/content.type';
-import { FileType } from './types/file.type';
 import { injection } from './live-reload/injection';
 import { address } from './utils/address';
 import { Protocols } from './types/protocol.enum';
-import { contentTypeMap } from './types/content-type.map';
+import { getType } from 'mime';
 
 const readDir = (path: fs.PathLike): string[] => {
 	return fs.readdirSync(path).reduce((acc, cur) => {
@@ -25,9 +23,9 @@ export const listenerFactory = (dir: fs.PathLike, host: string, port: number): h
 	const dirs: string[] = readDir(dir);
 	const payload = injection(address(Protocols.ws, host, port));
 
-	function injectPayload(data: Buffer): string {
+	function injectPayload(data: string): string {
 		const selector = '<head>';
-		const html = data.toString('utf-8').split(selector);
+		const html = data.split(selector);
 		return html[0]
 			+ selector
 			+ '\n<script>\n'
@@ -39,12 +37,12 @@ export const listenerFactory = (dir: fs.PathLike, host: string, port: number): h
 	return function(req, res) {
 		const url = req.url ?? '';
 	
-		let contentType: ContentType;
+		let contentType: string | null;
 		let path: fs.PathLike;
 	
 		if (url === '/') {
-			contentType = 'text/html';
-			path = `${dir}/index.html`
+			path = `${dir}/index.html`;
+			contentType = getType(path) ?? '';
 		} else {
 			const noSlash = url.substr(1);
 			const file = noSlash.split('.').length > 1
@@ -52,12 +50,10 @@ export const listenerFactory = (dir: fs.PathLike, host: string, port: number): h
 				: dirs.find(f => f.split('.')[0] === noSlash);
 	
 			if (file) {
-				const ext = file.split('.')[1] as FileType;
+				path = `${dir}/${file}`;
+				contentType = getType(path);
 					
-				if (ext) {
-					contentType = contentTypeMap[ext];
-					path = `${dir}/${file}`;
-				} else {
+				if (!contentType) {
 					const message = `File Type Incompatible`
 					console.error(message);
 					res.writeHead(500);
@@ -73,14 +69,9 @@ export const listenerFactory = (dir: fs.PathLike, host: string, port: number): h
 			}
 		}
 
-		fs.readFile(path, {}, (_, data) => {
-			res.setHeader('Content-Type', contentType);
-			res.writeHead(200);
-			if (contentType === 'text/html') {
-				res.end(injectPayload(data));
-			} else {
-				res.end(data);
-			}
-		});
+		const data = fs.readFileSync(path, 'utf-8');
+		res.setHeader('Content-Type', contentType);
+		res.writeHead(200);
+		res.end(contentType === 'text/html' ? injectPayload(data) : data);
 	}
 }
